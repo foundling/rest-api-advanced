@@ -8,5 +8,11 @@
     "start": "node server.js"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "knex": "^0.15.2",
+    "mysql": "^2.16.0"
+  }
 }

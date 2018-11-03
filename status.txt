@@ -1,0 +1,18 @@
+Alex Ramsdell
+OSU CS 493 - Cloud Application Development
+Week 5 - Advanced REST features
+
+Status
+~~~~~~
+
+[ GET ] /ships
+  returns a collection of ships
+
+[ POST ] /ships/{ShipId}
+  returns a single ships
+
+[ PATCH ] /ships/{ShipId}
+  updates a ship by its ShipId
+
+[ DELETE ] /ships/{ShipId}
+  deletes a ship by its ShipId

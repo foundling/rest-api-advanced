@@ -1,0 +1,22 @@
+use ship;
+drop table if exists Ship;
+
+CREATE TABLE Ship (
+
+  ShipId int NOT NULL AUTO_INCREMENT,  
+  Name VARCHAR(255) NOT NULL,
+  Type VARCHAR(255) NOT NULL,
+  Length int NOT NULL,
+
+  PRIMARY KEY (ShipId)
+
+  -- cargo is dynamically queried, e.g. 'select * from Cargo where CargoId = ShipId'
+  -- self link is dynamically created
+);
+
+INSERT INTO Ship (Name, Type, Length) values ('S.S. Motherboard', 'Schooner', 28); 
+INSERT INTO Ship (Name, Type, Length) values ('The George Harrison II', 'Clipper', 190); 
+INSERT INTO Ship (Name, Type, Length) values ('The Paul McCartney', 'Sailboat', 130); 
+INSERT INTO Ship (Name, Type, Length) values ('The Paul McCartney II', 'Sailboat', 180); 
+INSERT INTO Ship (Name, Type, Length) values ('The Michael Jackson ', 'Friggate', 120); 
+INSERT INTO Ship (Name, Type, Length) values ('The Yoko Ono', 'Sailboat', 430); 
