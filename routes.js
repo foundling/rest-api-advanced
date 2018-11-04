@@ -101,17 +101,6 @@ shipRouter.put('/ships/:ship_id', (req, res) => {
 
 })
 
-shipRouter.delete('/ships/:ship_id', (req, res) => {
-  const { ship_id } = req.params
-  return ship
-    .delete({ query: { ship_id } })
-    .then(affectedRows => {
-      if (affectedRows > 0)
-        return res.sendStatus(204)
-      return res.status(400).send({ msg: 'cannot delete ship. resource does not exist.' })
-    })
-})
-
 shipRouter.patch('/ships/:ship_id', (req, res) => {
 
   const { ship_id } = req.params
@@ -134,6 +123,17 @@ shipRouter.patch('/ships/:ship_id', (req, res) => {
         .updateById(ship_id, updates)
         .then(() => res.sendStatus(303))
 
+    })
+})
+
+shipRouter.delete('/ships/:ship_id', (req, res) => {
+  const { ship_id } = req.params
+  return ship
+    .delete({ query: { ship_id } })
+    .then(affectedRows => {
+      if (affectedRows > 0)
+        return res.sendStatus(204)
+      return res.status(404).send({ msg: 'Resource not found.' })
     })
 })
 

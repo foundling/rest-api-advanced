@@ -1,0 +1,58 @@
+Alex Ramsdell
+OSU CS 493 - Cloud Application Development
+Week 5 - Advanced REST features
+
+Status
+~~~~~~
+
+[ GET ] /ships
+  returns a collection of ships with {ship_id,name,type,length,self} properties
+  status code: 200 upon sucess
+  params: none
+
+[ POST ] /ships
+  creates a single ship
+  status code: 201 upon successful ship creation
+  params:
+    path: [required] ship_id 
+    body: [required] name, type, length
+
+[ PUT ] /ships
+  replace ship collection (invalid operation)
+  status code: 405
+  params: none
+
+[ DELETE ] /ships
+  delete entire ship collection (invalid operation)
+  status code: 405
+  params: none
+
+[ GET ] /ships/{ship_id}
+  returns a ship record by its ship id. Record contains {ship_id, name,type,length, self} properties.  
+    Return format defaults to JSON unless 'text/html' specified in header's 'Content-Type' field
+  status code: 200 upon successful deletion of ship with id {ship_id}, 404 if no ship exists with that id
+  params:
+    path: [required] ship_id
+    header: [optional] 'Content-Type: application/json' or 'Content-Type: text/html'
+
+[ PUT ] /ships/{ship_id}
+  Entirely replaces a ship's data by its ship id
+  status code: 303 upon success, 400 if invalid updates (e.g., ship_id) are supplied in the body
+  params:
+    path: [required] ship_id
+    body: [required] name, type, length
+
+[ PATCH ] /ships/{ship_id}
+  Updates a ship record by its ship id
+  status code: 303 upon success, 400 if invalid updates (e.g., ship_id) are supplied in the body
+  params:
+    path: [required] ship_id
+    body: [required - at least one] name, type, length
+
+[ DELETE ] /ships/{ship_id}
+  deletes a ship by its ship id
+  status code: 204 upon successful deletion of ship with id {ship_id}, 404 if there is no ship by the supplied {ship_id}
+  params:
+    path: [required] ship_id
+
+
