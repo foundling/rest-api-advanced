@@ -37,22 +37,25 @@ function formatResponse(data, format) {
 
 }
 
+const config = {
+  user: process.env.SQL_USER,
+  password: process.env.SQL_PASSWORD,
+  database: process.env.SQL_DATABASE
+}
+
+if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
+  config.host = `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`;
+}
+
 const shipRouter = Router()
 const db = knex({
-  debug: true,
-  client: 'mysql',
-  connection: {
-    user: process.env.SQL_USER,
-    password: process.env.SQL_PASSWORD,
-    database: process.env.SQL_DATABASE
-  }
+  client: 'pg',
+  connection: config 
 })
 
 const ship = new Ship({db, table: 'Ship' })
 
 shipRouter.get('/ships', (req, res) => {
-
-  const responseFormat = req.get('Accept')
 
   return ship
     .find()
@@ -61,15 +64,7 @@ shipRouter.get('/ships', (req, res) => {
       if (!ships)
         return res.sendStatus(404)
 
-
-      const responseData = ships.map(ship => {
-        const metadata = getMetadata(req, ship)
-        const shipData = _.merge(ship,metadata)
-        return formatResponse(shipData, responseFormat) 
-      })
-
-      res.set('Content-Type',responseFormat)
-      return res.status(200).send(responseFormat === 'text/html' ? responseData.join('') : responseData)
+      return res.status(200).send(ships)
 
     })
 
@@ -80,8 +75,16 @@ shipRouter.post('/ships', (req, res) => {
   const payload = req.body
   return ship
     .create(payload)
-    .then(id => res.status(200).send({ id }) )
+    .then(id => res.status(201).send({ id }) )
 
+})
+
+shipRouter.put('/ships', (req, res) => {
+  res.sendStatus(405)
+})
+
+shipRouter.delete('/ships', (req, res) => {
+  res.sendStatus(405)
 })
 
 shipRouter.get('/ships/:ShipId', (req, res) => {
@@ -93,18 +96,37 @@ shipRouter.get('/ships/:ShipId', (req, res) => {
     .findOne({ query: { ShipId } })
     .then(data => {
 
-      const metadata = getMetadata(req, data)
-      const formattedData = formatResponse(_.merge(data, metadata), responseFormat)
       if (!data)
-        return res.sendStatus(404).send('OK')
+        return res.sendStatus(404)
 
       res.set('Content-Type', responseFormat)
-      return res.status(200).send(responseFormat === 'text/html' ? new Buffer(formattedData) : formattedData)
+
+      const metadata = getMetadata(req, data)
+      const formattedData = formatResponse(_.merge(data, metadata), responseFormat)
+
+      return res
+        .status(200)
+        .send(responseFormat === 'text/html' ? new Buffer(formattedData) : formattedData)
 
     })
 
 })
 
+shipRouter.put('/ships/:ShipId', (req, res) => {
+
+  const { ShipId } = req.params
+  const updates = req.body
+
+  return ship
+    .findOne({ query: { ShipId } })
+    .then(data => {
+      return ship
+        .updateById(ShipId, updates)
+        .then(() => res.sendStatus(303)) // redirect to updated ship resource
+
+    })
+
+})
 
 shipRouter.delete('/ships/:ShipId', (req, res) => {
   const { ShipId } = req.params
@@ -112,7 +134,7 @@ shipRouter.delete('/ships/:ShipId', (req, res) => {
     .delete({ query: { ShipId } })
     .then(affectedRows => {
       if (affectedRows > 0)
-        return res.sendStatus(200).send('OK')
+        return res.sendStatus(204)
       return res.status(400).send({ msg: 'cannot delete ship. resource does not exist.' })
     })
 })
@@ -137,7 +159,7 @@ shipRouter.patch('/ships/:ShipId', (req, res) => {
 
       return ship
         .updateById(ShipId, updates)
-        .then(() => res.sendStatus(200))
+        .then(() => res.sendStatus(303))
 
     })
 })
