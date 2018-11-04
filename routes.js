@@ -26,7 +26,7 @@ const db = knex({
   connection: config 
 })
 
-const ship = new Ship({db, table: 'ship' })
+const ship = new Ship({ db, table: 'ship' })
 
 shipRouter.get('/ships', (req, res) => {
 
