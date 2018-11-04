@@ -1,0 +1,18 @@
+\c ship;
+DROP TABLE IF EXISTS Ship;
+
+CREATE TABLE Ship (
+
+  ShipId SERIAL PRIMARY KEY,  
+  Name VARCHAR(255) NOT NULL,
+  Type VARCHAR(255) NOT NULL,
+  Length int NOT NULL
+
+);
+
+INSERT INTO Ship (Name, Type, Length) values ('S.S. Motherboard', 'Schooner', 28); 
+INSERT INTO Ship (Name, Type, Length) values ('The George Harrison II', 'Clipper', 190); 
+INSERT INTO Ship (Name, Type, Length) values ('The Paul McCartney', 'Sailboat', 130); 
+INSERT INTO Ship (Name, Type, Length) values ('The Paul McCartney II', 'Sailboat', 180); 
+INSERT INTO Ship (Name, Type, Length) values ('The Michael Jackson ', 'Friggate', 120); 
+INSERT INTO Ship (Name, Type, Length) values ('The Yoko Ono', 'Sailboat', 430); 
