@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const config = require('./config')
 
 class Model {
 
@@ -11,7 +10,9 @@ class Model {
   create(data = {}) {
     return this.db(this.table)
       .insert(data)
-      .then(([ id ]) => id)
+      .returning('ship_id')
+      .then(([ship_id, ...rest]) => ship_id) 
+
   }
 
   find({ fields = ['*'], query = {}, offset = 0 } = {}) {
@@ -50,13 +51,13 @@ class Ship extends Model {
     let invalid = false
     const invalidUpdateMsg = { msg: 'Cannot change Id of resource' } 
 
-    if (updates.ShipId) {
-      delete updates.ShipId
+    if (updates.ship_id) {
+      delete updates.ship_id
       invalid = true
     }
 
     return this.db(this.table)
-      .where({ ShipId: Number(id) })
+      .where({ ship_id: Number(id) })
       .update(updates)
       .then(() => invalid ? invalidUpdateMsg : undefined ) 
   }

@@ -1,40 +1,13 @@
 const Router = require('express').Router
 const knex = require('knex')
-const { Ship } = require('./models')
 const _ = require('lodash')
 
+const { Ship } = require('./models')
+const { formatResponse, getMetadata, toHTML } = require('./utils')
+
 if (!process.env.SQL_USER) {
-  console.log('SOURCE YOUR ENV, DANGUS')
+  console.log('SOURCE YOUR ENV!')
   process.exit(1)
-}
-
-function toHTML(ship) {
-
-  const props = Object
-    .keys(ship)
-    .map(key => `<li>${key}: ${ship[key]}</li>`)
-    .join('')
-
-  return `<ul>${props}</ul>`
-
-}
-
-function getMetadata(req, data) {
-
-  const base = `${req.protocol}://${req.get('host')}${req.originalUrl}`
-  return Array.isArray(data) ?
-    data.map(ship => ({ self: `${ base }/${ ship.ShipId }` })) :
-    ({ self: `${ base }` })
-    
-}
-
-function formatResponse(data, format) {
-
-  switch(format) {
-    case 'text/html':        return Array.isArray(data) ? data.map(toHTML).join('') : toHTML(data)
-    default:                 return data
-  }
-
 }
 
 const config = {
@@ -53,7 +26,7 @@ const db = knex({
   connection: config 
 })
 
-const ship = new Ship({db, table: 'Ship' })
+const ship = new Ship({db, table: 'ship' })
 
 shipRouter.get('/ships', (req, res) => {
 
@@ -87,13 +60,13 @@ shipRouter.delete('/ships', (req, res) => {
   res.sendStatus(405)
 })
 
-shipRouter.get('/ships/:ShipId', (req, res) => {
+shipRouter.get('/ships/:ship_id', (req, res) => {
 
-  const { ShipId } = req.params
+  const { ship_id } = req.params
   const responseFormat = req.get('Accept')
 
   return ship
-    .findOne({ query: { ShipId } })
+    .findOne({ query: { ship_id } })
     .then(data => {
 
       if (!data)
@@ -106,32 +79,32 @@ shipRouter.get('/ships/:ShipId', (req, res) => {
 
       return res
         .status(200)
-        .send(responseFormat === 'text/html' ? new Buffer(formattedData) : formattedData)
+        .send(responseFormat === 'text/html' ? Buffer.from(formattedData) : formattedData)
 
     })
 
 })
 
-shipRouter.put('/ships/:ShipId', (req, res) => {
+shipRouter.put('/ships/:ship_id', (req, res) => {
 
-  const { ShipId } = req.params
+  const { ship_id } = req.params
   const updates = req.body
 
   return ship
-    .findOne({ query: { ShipId } })
+    .findOne({ query: { ship_id } })
     .then(data => {
       return ship
-        .updateById(ShipId, updates)
+        .updateById(ship_id, updates)
         .then(() => res.sendStatus(303)) // redirect to updated ship resource
 
     })
 
 })
 
-shipRouter.delete('/ships/:ShipId', (req, res) => {
-  const { ShipId } = req.params
+shipRouter.delete('/ships/:ship_id', (req, res) => {
+  const { ship_id } = req.params
   return ship
-    .delete({ query: { ShipId } })
+    .delete({ query: { ship_id } })
     .then(affectedRows => {
       if (affectedRows > 0)
         return res.sendStatus(204)
@@ -139,26 +112,26 @@ shipRouter.delete('/ships/:ShipId', (req, res) => {
     })
 })
 
-shipRouter.patch('/ships/:ShipId', (req, res) => {
+shipRouter.patch('/ships/:ship_id', (req, res) => {
 
-  const { ShipId } = req.params
+  const { ship_id } = req.params
   const updates = req.body
 
-  if (updates.ShipId != null) {
+  if (updates.ship_id != null) {
     return res
       .status(400)
       .send({ msg: 'Cannot update id of existing resource' })
   }
 
   return ship
-    .findOne({ query: { ShipId } })
+    .findOne({ query: { ship_id } })
     .then(data => {
 
       if (!data)
         return res.sendStatus(404)
 
       return ship
-        .updateById(ShipId, updates)
+        .updateById(ship_id, updates)
         .then(() => res.sendStatus(303))
 
     })
