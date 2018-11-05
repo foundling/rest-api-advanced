@@ -37,8 +37,12 @@ shipRouter.get('/ships', (req, res) => {
       if (!ships)
         return res.sendStatus(404)
 
+      const shipsMeta = getMetadata(req, ships)
+      const shipData = shipsMeta.map((metadata, index) => {
+        return _.merge(metadata, ships[index])  
+      })
 
-      return res.status(200).send(ships.map(ship => _.merge(getMetadata(req, ship), ship)))
+      return res.status(200).send(shipData)
 
     })
 
@@ -73,7 +77,8 @@ shipRouter.get('/ships/:ship_id', (req, res) => {
       if (!data)
         return res.sendStatus(404)
 
-      res.set('Content-Type', responseFormat)
+      if (['text/html','application/json'].includes(responseFormat))
+        res.contentType(responseFormat)
 
       const metadata = getMetadata(req, data)
       const formattedData = formatResponse(_.merge(data, metadata), responseFormat)
