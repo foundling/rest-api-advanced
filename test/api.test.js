@@ -308,7 +308,6 @@ describe('[GET] on /ships/{ship_id}', () => {
       const ship = JSON.parse(res.body)
       const shipSelfUrl = ship.self
       const matches = config[env].shipRe.test(shipSelfUrl) 
-      console.log('matches: ', shipSelfUrl, config[env].shipRe)
       expect(matches).to.equal(true)
 
       requestPromise({
