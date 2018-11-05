@@ -4,7 +4,8 @@
   "description": "",
   "main": "models.js",
   "scripts": {
-    "test": "DEV=TRUE mocha test/*.test.js",
+    "testdev": "DEV=TRUE mocha --timeout 15000 test/*.test.js",
+    "test": "mocha test/*.test.js",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },

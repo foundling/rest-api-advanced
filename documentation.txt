@@ -2,8 +2,8 @@ Alex Ramsdell
 OSU CS 493 - Cloud Application Development
 Week 5 - Advanced REST features
 
-Status
-~~~~~~
+Status API
+~~~~~~~~~~
 
 [ GET ] /ships
   returns a collection of ships with {ship_id,name,type,length,self} properties

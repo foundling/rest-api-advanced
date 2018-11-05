@@ -294,6 +294,30 @@ describe('[PATCH] on /ships/{ship_id}', (done) => {
       })
   })
 
+  it('Should return a 400, bad request on an an update with a ship_id in the payload', (done) => {
+
+    const updates = {
+      name: 's.s. update',
+      length: 400,
+      type: 'updated ship',
+      ship_id: 400,
+    }
+
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'PATCH',
+      resolveWithFullResponse: true,
+      body: updates,
+      json: true
+    })
+    .catch(res => {
+      expect(res.statusCode).to.equal(400)
+      done()
+    })
+
+  })
+
+
   it('Should return status 303', (done) => {
 
     const updates = {
@@ -351,14 +375,27 @@ describe('[PATCH] on /ships/{ship_id}', (done) => {
 
 })
 
-/*
 describe('[DELETE] on /ships/{ship_id}', (done) => {
 
+  let shipId = null
+
+  // delete all ships and create new ship
+  beforeEach('deleting all ships', function(done) {
+    deleteAllShips()
+      .then(() => { 
+        createShips(3)
+          .then((responses) => { 
+            const shipIds = responses.map(response => response.toJSON().body).map(body => body.id)
+            shipId = shipIds[0] // first of 3, saved before subsequent tests run
+            done() 
+        }) 
+      })
+  })
+
   it('should return 204 on successful ship deletion', done => {
-    const shipId = 20
     requestPromise({
       uri: `${config[env].baseUrl}/ships/${shipId}`,
-      method: 'DELEtE',
+      method: 'DELETE',
       resolveWithFullResponse: true,
     })
     .then(res => { 
@@ -367,5 +404,17 @@ describe('[DELETE] on /ships/{ship_id}', (done) => {
     })
   })
 
+  it('should return 404 on delete request for a resource that does not exist.', done => {
+    const badShipId = 20000000
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${badShipId}`,
+      method: 'DELETE',
+      resolveWithFullResponse: true,
+    })
+    .catch(res => { 
+      expect(res.statusCode).to.equal(404)
+        done()
+    })
+  })
+
 })
-*/
