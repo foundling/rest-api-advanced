@@ -20,14 +20,13 @@ function deleteAllShips() {
       method: 'GET',
       uri: `${config[env].baseUrl}/ships`,
       resolveWithFullResponse: true,
-  })
-  .then(request => {
+  }).then(request => {
     const ships = JSON.parse(request.body)
     const shipIds = ships.map(ship => ship.ship_id) 
     const deletions = shipIds.map(shipId => {
       return requestPromise({
         method: 'DELETE',
-        uri: `${config[env].baseUrl}/ships/${shipId}`,
+        uri: `${config[env].baseUrl}/ships`,
         resolveWithFullResponse: true,
       })
     })
@@ -35,23 +34,18 @@ function deleteAllShips() {
   })
 }
 
-function createShips(n=1) {
-  const creates = [...Array(n).keys()].map((key) => {
-    return requestPromise({
-      method: 'POST',
-      uri: `${config[env].baseUrl}/ships`,
-      resolveWithFullResponse: true,
-      body: {
-        name: `a new ship! (#${key + 1})`,
-        length: 3230,
-        type: 'newtype'
-      },
-      json: true
-    })
+function createAShip() {
+  return requestPromise({
+    method: 'POST',
+    uri: `${config[env].baseUrl}/ships`,
+    resolveWithFullResponse: true,
+    body: {
+      name: 'a new ship!',
+      length: 3230,
+      type: 'newtype'
+    },
+    json: true
   })
-
-  return Promise
-    .all(creates)
 }
 
 
@@ -59,9 +53,18 @@ function createShips(n=1) {
 describe('[GET] on /ships', () => {
 
   // delete all ships and create a new ship
-  beforeEach('deleting all ships', function(done) {
-    deleteAllShips().then(() => { 
-      createShips(3).then(() => { done() }) 
+  beforeEach(deleteAllShips.then(createAShip))
+
+    // create a ship
+    // get that ship
+    requestPromise({
+      method: 'GET',
+      uri: `${config[env].baseUrl}/ships`,
+      resolveWithFullResponse: true,
+    })
+    .then(({ body, headers }) => {
+      expect(JSON.parse(body)).to.be.an('array')
+      done()
     })
   })
 
@@ -83,7 +86,7 @@ describe('[GET] on /ships', () => {
     })
   })
 
-  it('Each ship should have a valid "self" link that I can follow to reach that entity.', (done) => {
+  it('Each ship should have a "self" property comprised of the <request_path>/<ship_id>', (done) => {
 
     requestPromise({
       method: 'GET',
@@ -93,34 +96,24 @@ describe('[GET] on /ships', () => {
     .then(({ body }) => {
 
       const ships = JSON.parse(body)
-      const selfLinks = ships.map(ship => ship.self)
-      const verifications = selfLinks.map(uri => {
-        return requestPromise({
-          uri,
-          method: 'GET',
-          resolveWithFullResponse: true,
-        })
+      const allSelfLinksAreValid = ships.every(ship => {
+        return config[env].shipRe.test(ship.self)
       })
 
-      return Promise
-        .all(verifications)
-        .then((responses, index) => {
+      expect(allSelfLinksAreValid).to.be.true
 
-          const allSelfLinksAreValid = responses.every((response, index) => JSON.parse(response.body).ship_id === ships[index].ship_id)
-          expect(allSelfLinksAreValid).to.be.true
-          done()
+      done()
 
-        })
     })
-
   })
 
 }) 
 
+/*
 describe('[PUT] on /ships', (done) => {
-  it('should fail with 405 because put on /ships is invalid', (done) => {
+  it('should fail because put on /ships is invalid', (done) => {
     const payload = {
-      name: 'SS BOB II',
+      name: 'ss bob ii',
       length: 900,
       type: 'clipper ship'
     }
@@ -135,26 +128,6 @@ describe('[PUT] on /ships', (done) => {
     })
   })
 })
-
-describe('[PATCH] on /ships', (done) => {
-  it('should fail with 405 because patch on /ships is invalid', (done) => {
-    const payload = {
-      name: 'SS BOB II',
-      length: 900,
-      type: 'clipper ship'
-    }
-    requestPromise({
-      resolveWithFullResponse: true,
-      uri: `${config[env].baseUrl}/ships`,
-      method: 'PATCH'
-    }) 
-    .catch(response => {
-      expect(1).to.equal(1)
-      done()
-    })
-  })
-})
-
 
 describe('[POST] on /ships', (done) => {
 
@@ -197,22 +170,9 @@ describe('[DELETE] on /ships', (done) => {
 
 describe('[GET] on /ships/{ship_id}', () => {
 
-  let shipId = null
-
-  // delete all ships and create new ship
-  beforeEach('deleting all ships', function(done) {
-    deleteAllShips()
-      .then(() => { 
-        createShips(3)
-          .then((responses) => { 
-            const shipIds = responses.map(response => response.toJSON().body).map(body => body.id)
-            shipId = shipIds[0] // first of 3, saved before subsequent tests run
-            done() 
-        }) 
-      })
-  })
-
   it('Should successfully return 200 status', (done) => {
+
+    const shipId = 2
 
     requestPromise({
       uri: `${config[env].baseUrl}/ships/${shipId}`,
@@ -227,6 +187,8 @@ describe('[GET] on /ships/{ship_id}', () => {
   })
 
   it('Should successfully return an object with name, length, type and self properties', (done) => {
+
+    const shipId = 2
 
     requestPromise({
       uri: `${config[env].baseUrl}/ships/${shipId}`,
@@ -249,6 +211,8 @@ describe('[GET] on /ships/{ship_id}', () => {
   })
 
   it('Ship self link should resolve to itself', (done) => {
+
+    const shipId = 2
 
     requestPromise({
       uri: `${config[env].baseUrl}/ships/${shipId}`,
@@ -279,23 +243,9 @@ describe('[GET] on /ships/{ship_id}', () => {
 
 describe('[PATCH] on /ships/{ship_id}', (done) => {
 
-  let shipId = null
-
-  // delete all ships and create new ships
-  beforeEach('deleting all ships', function(done) {
-    deleteAllShips()
-      .then(() => { 
-        createShips(3)
-          .then((responses) => { 
-            const shipIds = responses.map(response => response.toJSON().body).map(body => body.id)
-            shipId = shipIds[0] // first of 3, saved before subsequent tests run
-            done() 
-        }) 
-      })
-  })
-
   it('Should return status 303', (done) => {
 
+    const shipId = 27
     const updates = {
       name: 's.s. update',
       length: 400,
@@ -315,43 +265,8 @@ describe('[PATCH] on /ships/{ship_id}', (done) => {
     })
 
   })
-
-  it('Should return a path I can use to locate the new resource.', (done) => {
-
-    const updates = {
-      name: 's.s. update',
-      length: 400,
-      type: 'updated ship'
-    }
-
-    requestPromise({
-      uri: `${config[env].baseUrl}/ships/${shipId}`,
-      method: 'PATCH',
-      resolveWithFullResponse: true,
-      body: updates,
-      json: true
-    })
-    .catch(res => {
-
-      const resourceLocation = res.response.headers.location
-
-      requestPromise({
-        method: 'GET',
-        uri: resourceLocation,
-        resolveWithFullResponse: true,
-      })
-      .then(res => {
-        const ship_id = JSON.parse(res.body).ship_id
-        expect(ship_id).to.equal(shipId)
-        done()
-      })
-    })
-
-  })
-
 })
 
-/*
 describe('[DELETE] on /ships/{ship_id}', (done) => {
 
   it('should return 204 on successful ship deletion', done => {

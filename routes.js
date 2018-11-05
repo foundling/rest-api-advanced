@@ -101,7 +101,12 @@ shipRouter.put('/ships/:ship_id', (req, res) => {
     .then(data => {
       return ship
         .updateById(ship_id, updates)
-        .then(() => res.sendStatus(303)) // redirect to updated ship resource
+        .then(() => {
+          const location = req.secure ? `https://${req.get('host')}${req.path}` : `${req.protocol}://${req.get('host')}${req.path}` 
+          res.location(location)
+          console.log(res.get('location'))
+          res.sendStatus(303)
+        }) // redirect to updated ship resource
 
     })
 
@@ -127,7 +132,12 @@ shipRouter.patch('/ships/:ship_id', (req, res) => {
 
       return ship
         .updateById(ship_id, updates)
-        .then(() => res.sendStatus(303))
+        .then(() => {
+          const location = req.secure ? `https://${req.get('host')}${req.path}` : `${req.protocol}://${req.get('host')}${req.path}` 
+          res.location(location)
+          console.log(res.get('location'))
+          res.sendStatus(303)
+        })
 
     })
 })
