@@ -77,8 +77,10 @@ shipRouter.get('/ships/:ship_id', (req, res) => {
       if (!data)
         return res.sendStatus(404)
 
-      if (['text/html','application/json'].includes(responseFormat))
-        res.contentType(responseFormat)
+      if (!['text/html','application/json'].includes(responseFormat))
+        return res.status(406).send({ 
+          msg: 'Cannot handle Content-Type: ' + responseFormat + '. Use "text/html" or "application/json" '
+        })
 
       const metadata = getMetadata(req, data)
       const formattedData = formatResponse(_.merge(data, metadata), responseFormat)

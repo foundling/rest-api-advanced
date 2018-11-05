@@ -249,6 +249,28 @@ describe('[GET] on /ships/{ship_id}', () => {
     })
   })
 
+  it('It should return 406 status if I pass it a Content-Type header that is not json or html.', (done) => {
+
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'GET',
+      resolveWithFullResponse: true,
+      headers: {
+        'Accept': 'text/garbage'
+      }
+    })
+    .then(res => {
+      console.log(res.statusCode)
+        done()
+    })
+    .catch(res => {
+      expect(res.statusCode).to.equal(406)
+      done()
+    })
+
+  })
+
+
   it('It should return html if I pass it a Content-Type header with the value of "text/html"', (done) => {
 
     requestPromise({
