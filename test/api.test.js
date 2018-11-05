@@ -129,7 +129,6 @@ describe('[DELETE] on /ships', (done) => {
     })
   })
 })
-/*
 
 // SHIPS/ID
 
@@ -139,12 +138,15 @@ describe('[GET] on /ships/{ship_id}', () => {
 
     const shipId = 2
 
-    chai.request(config[env].baseUrl)
-      .get(`/ships/${shipId}`)
-      .end((err, res) => {
-        expect(res.status).to.equal(200)
-        done()
-      })
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'GET',
+      resolveWithFullResponse: true
+    })
+    .then(res => {
+      expect(res.statusCode).to.equal(200)
+      done()
+    })
 
   })
 
@@ -152,39 +154,53 @@ describe('[GET] on /ships/{ship_id}', () => {
 
     const shipId = 2
 
-    chai.request(config[env].baseUrl)
-      .get(`/ships/${shipId}`)
-      .end((err, res) => {
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'GET',
+      resolveWithFullResponse: true
+    })
+    .then(res => {
 
-        const ship = res.body
+      const ship = JSON.parse(res.body)
 
-        expect(ship).to.be.an('object')
-        expect(ship).to.have.property('name')
-        expect(ship).to.have.property('length')
-        expect(ship).to.have.property('type')
-        expect(ship).to.have.property('self')
+      expect(ship).to.be.an('object')
+      expect(ship).to.have.property('name')
+      expect(ship).to.have.property('length')
+      expect(ship).to.have.property('type')
+      expect(ship).to.have.property('self')
 
-        done()
+      done()
 
-      })
+    })
   })
 
-  it('Ship self link should be correct', (done) => {
+  it('Ship self link should resolve to itself', (done) => {
 
     const shipId = 2
 
-    chai
-      .request(config[env].baseUrl)
-      .get(`/ships/${shipId}`)
-      .end((err, res) => {
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'GET',
+      resolveWithFullResponse: true
+    })
+    .then(res => {
+      const ship = JSON.parse(res.body)
+      const shipSelfUrl = ship.self
+      const matches = config[env].shipRe.test(shipSelfUrl) 
+      expect(matches).to.equal(true)
 
-        const ship = res.body
-        const shipSelfUrl = ship.self
-        const matches = config[env].shipRe.test(shipSelfUrl) 
-        expect(matches).to.equal(true)
-        done()
-
+      requestPromise({
+        uri: shipSelfUrl,
+        method: 'GET',
+        resolveWithFullResponse: true
       })
+      .then(res => {
+        const shipData = JSON.parse(res.body)
+        expect(shipData.ship_id).to.equal(shipId) 
+        done()
+      })
+
+    })
   })
 
 })
@@ -193,42 +209,41 @@ describe('[PATCH] on /ships/{ship_id}', (done) => {
 
   it('Should return status 303', (done) => {
 
-    const shipId = 5
+    const shipId = 27
     const updates = {
       name: 's.s. update',
       length: 400,
       type: 'updated ship'
     }
 
-    chai
-      .request(config[env].baseUrl)
-      .patch(`/ships/${shipId}`)
-      .end((err, res) => {
-        expect(res.status).to.equal(303)
-        done()
-      })
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'PATCH',
+      resolveWithFullResponse: true,
+      body: updates,
+      json: true
+    })
+    .catch(res => {
+      expect(res.statusCode).to.equal(303)
+      done()
+    })
 
   })
 })
 
-describe('[PATCH] on /ships/{ship_id}', (done) => {
-    const shipId = 5
-    chai
-      .request(config[env].baseUrl)
-      .get(`/ships/${shipId}`)
-      .end((err, res) => {
-        done()
-      })
-})
 describe('[DELETE] on /ships/{ship_id}', (done) => {
 
-    const shipId = 5
-    chai
-      .request(config[env].baseUrl)
-      .get(`/ships/${shipId}`)
-      .end((err, res) => {
+  it('should return 204 on successful ship deletion', done => {
+    const shipId = 20
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'DELEtE',
+      resolveWithFullResponse: true,
+    })
+    .then(res => { 
+      expect(res.statusCode).to.equal(204)
         done()
-      })
+    })
+  })
 
 })
-*/
