@@ -1,6 +1,7 @@
 const mocha = require('mocha')
 const chai = require('chai')
 const { expect } = chai
+const $ = require('cheerio')
 const request = require('request')
 const requestPromise = require('request-promise-native')
 const env = process.env.DEV ? 'dev' : 'prod'
@@ -10,8 +11,8 @@ const config = {
     shipRe: /^http:\/\/localhost:8080\/ships\/\d+$/
   },
   prod: {
-    baseUrl: 'https://rest-api-advanced.appspot.com',
-    shipRe: /^https:\/\/rest-api-advanced\.appspot\.com\/ships\/\d+$/
+    baseUrl: 'http://rest-api-advanced.appspot.com',
+    shipRe: /^http:\/\/rest-api-advanced\.appspot\.com\/ships\/\d+$/
   }
 }
 
@@ -204,7 +205,7 @@ describe('[GET] on /ships/{ship_id}', () => {
     deleteAllShips()
       .then(() => { 
         createShips(3)
-          .then((responses) => { 
+          .then(responses => { 
             const shipIds = responses.map(response => response.toJSON().body).map(body => body.id)
             shipId = shipIds[0] // first of 3, saved before subsequent tests run
             done() 
@@ -248,6 +249,54 @@ describe('[GET] on /ships/{ship_id}', () => {
     })
   })
 
+  it('It should return html if I pass it a Content-Type header with the value of "text/html"', (done) => {
+
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'GET',
+      resolveWithFullResponse: true,
+      headers: {
+        'Accept': 'text/html'
+      }
+    })
+    .then(res => {
+      const htmlParsed = $(res.body)
+      const fragmentParsedSuccessfully = htmlParsed[0] != null // aka, has at least a first parse result
+      expect(fragmentParsedSuccessfully).to.be.true
+      done()
+    })
+    .catch(() => {
+      done()
+    })
+
+  })
+
+  it('should return json if I pass the Content-Type header, "application/json".', (done) => {
+
+    requestPromise({
+      uri: `${config[env].baseUrl}/ships/${shipId}`,
+      method: 'GET',
+      resolveWithFullResponse: true,
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(res => {
+      const htmlParsed = $(res.body)
+      const fragmentParsedSuccessfully = !htmlParsed[0] 
+      const validJSON = JSON.parse(JSON.stringify(res.body))
+      expect(fragmentParsedSuccessfully).to.be.false
+      expect(validJSON).to.be.true
+      done()
+    })
+    .catch(() => {
+      done()
+    })
+
+  })
+
+
+
   it('Ship self link should resolve to itself', (done) => {
 
     requestPromise({
@@ -259,6 +308,7 @@ describe('[GET] on /ships/{ship_id}', () => {
       const ship = JSON.parse(res.body)
       const shipSelfUrl = ship.self
       const matches = config[env].shipRe.test(shipSelfUrl) 
+      console.log('matches: ', shipSelfUrl, config[env].shipRe)
       expect(matches).to.equal(true)
 
       requestPromise({
@@ -269,6 +319,9 @@ describe('[GET] on /ships/{ship_id}', () => {
       .then(res => {
         const shipData = JSON.parse(res.body)
         expect(shipData.ship_id).to.equal(shipId) 
+        done()
+      })
+      .catch(() => {
         done()
       })
 
