@@ -37,7 +37,8 @@ shipRouter.get('/ships', (req, res) => {
       if (!ships)
         return res.sendStatus(404)
 
-      return res.status(200).send(ships)
+
+      return res.status(200).send(ships.map(ship => _.merge(getMetadata(req, ship), ship)))
 
     })
 

@@ -1,3 +1,12 @@
+function getMetadata(req, data) {
+
+  const base = `${req.protocol}://${req.get('host')}${req.originalUrl}`
+  return Array.isArray(data) ?
+    data.map(ship => ({ self: `${ base }/${ ship.ship_id }` })) :
+    ({ self: `${ base }/${ data.ship_id }` })
+    
+}
+
 function toHTML(ship) {
 
   const props = Object
@@ -8,16 +17,6 @@ function toHTML(ship) {
   return `<ul>${props}</ul>`
 
 }
-
-function getMetadata(req, data) {
-
-  const base = `${req.protocol}://${req.get('host')}${req.originalUrl}`
-  return Array.isArray(data) ?
-    data.map(ship => ({ self: `${ base }/${ ship.ShipId }` })) :
-    ({ self: `${ base }` })
-    
-}
-
 function formatResponse(data, format) {
 
   switch(format) {
